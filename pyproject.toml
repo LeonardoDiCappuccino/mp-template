@@ -1,6 +1,7 @@
 [build-system]
 requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
+build-backend = "build_backend"   # tools/build_backend.py: setuptools + fetches the stubs
+backend-path = ["tools"]
 
 [project]
 name = "mct-ble"
