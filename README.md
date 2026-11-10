@@ -74,7 +74,7 @@ Sonst gibt es einen Fehler und nichts wird gespeichert:
 
 | Fehlermeldung | Bedeutung |
 | --- | --- |
-| `ble_loader is not on this board` | Die Datei `lib/ble_loader.py` fehlt: Projekt per USB übertragen |
+| `ble_loader is not on this board` | Die Datei `util/ble_loader.py` fehlt: Projekt per USB übertragen |
 | `ble_loader is on this board but not running` | `boot.py` ruft `ble_loader.start()` nicht auf |
 | `ble_loader on this board is too old` | Der Loader kennt `link` noch nicht: Projekt neu übertragen |
 
@@ -255,7 +255,7 @@ Die PIN wird unverschlüsselt übertragen und hält deshalb nur Gelegenheits-Nut
 - **`mpremote: could not enter raw repl`** – Etwas blockiert `boot.py`, zum Beispiel ein blockierendes
   `ble_loader.serve()` dort (stattdessen `start()` verwenden). In einem seriellen Terminal Strg+C
   drücken und dann `mpremote connect COM4 resume ...` nutzen, das den Soft-Reset überspringt.
-- **`boot.py` oder `lib/ble_loader.py` per Bluetooth kaputt gemacht** – Der Loader startet nicht mehr.
+- **`boot.py` oder `util/ble_loader.py` per Bluetooth kaputt gemacht** – Der Loader startet nicht mehr.
   Per USB reparieren. Ein kaputtes `main.py` ist harmlos.
 - **Git Bash macht aus `/lib` einen Windows-Pfad** – PowerShell verwenden oder `export MSYS_NO_PATHCONV=1`.
 
@@ -264,7 +264,7 @@ Die PIN wird unverschlüsselt übertragen und hält deshalb nur Gelegenheits-Nut
 ```
 src/
   boot.py, main.py      Einstiegspunkte auf dem Board (boot.py startet den BLE-Loader, main.py ist dein Programm)
-  lib/ble_loader.py     BLE-Dienst: Dateien hochladen, starten/stoppen, Autorun (läuft auf dem ESP32)
+  util/ble_loader.py    BLE-Dienst: Dateien hochladen, starten/stoppen, Autorun (läuft auf dem ESP32)
   lib/blink.py          LED-Beispiel
   test/                 Skripte zum Ausprobieren mit `mpble exec`
 tools/ble_push.py       der Befehl `mpble` (läuft auf dem PC, nutzt bleak)

@@ -13,9 +13,9 @@
             "type": "process",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
             "args": [
-                "-m", "mpremote", "connect", "${config:esp32.port}",
+                "${workspaceFolder}/tools/run_usb.py", "${config:esp32.port}",
                 "mount", "${workspaceFolder}/src",
-                "exec", "import sys; sys.path.append('/remote/lib')",
+                "exec", "import sys; sys.path.extend(['/remote/lib', '/remote/util'])",
                 "run", "${file}"
             ],
             "group": { "kind": "build", "isDefault": true },
@@ -50,6 +50,16 @@
                 "+", "reset"
             ],
             "options": { "cwd": "${workspaceFolder}/src" },
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            // Deletes EVERYTHING on the device flash (boot.py, main.py, lib, ...).
+            // Redeploy afterwards with "MPR: Deploy src to device".
+            "label": "MPR: Clean device",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": ["-m", "mpremote", "connect", "${config:esp32.port}", "fs", "rm", "-r", "."],
             "presentation": { "reveal": "always", "panel": "shared", "clear": true },
             "problemMatcher": []
         },

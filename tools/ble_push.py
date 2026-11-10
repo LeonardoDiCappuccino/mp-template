@@ -243,6 +243,9 @@ def find_serial_port() -> str:
 # Runs on the board (through mpremote, without a soft reset). `import` finds the module that
 # boot.py already loaded; `instance` is set once ble_loader.start()/serve() has run.
 PROBE_CODE = """\
+import sys
+if '/util' not in sys.path:
+    sys.path.append('/util')
 try:
     import ble_loader as m
     print('MCT_LINK', m.instance.address if m.instance else 'NOT_STARTED')
