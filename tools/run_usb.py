@@ -1,47 +1,43 @@
-"""Run mpremote and make Ctrl+C reach the board.
+"""Run mpremote so that Ctrl+C reaches the program on the board.
 
-mpremote's `run` does not forward Ctrl+C to the device: the host process dies and the
-program keeps running on the board. This wrapper waits for mpremote to exit, then sends
-Ctrl+C over the serial port itself, so the script gets a real KeyboardInterrupt
-(its `except KeyboardInterrupt` runs) and its output is printed.
+mpremote's `run` does not forward Ctrl+C: the PC side dies and the program keeps running
+on the board. This runs mpremote in this process with one change: while it waits for the
+program's output, Ctrl+C sends Ctrl+C (0x03) to the board and keeps waiting. The program
+gets a real KeyboardInterrupt, so its `except KeyboardInterrupt` / `finally` blocks run and
+their output is shown. Press Ctrl+C again if the program catches it and keeps going.
 
 Usage: python tools/run_usb.py <port> <mpremote args after "connect <port>">...
 """
-import subprocess
 import sys
-import time
 
-import serial
+from mpremote import main as mpremote_main
+from mpremote.transport import TransportError
+from mpremote.transport_serial import SerialTransport
 
 
-def main() -> int:
-    port, args = sys.argv[1], sys.argv[2:]
-    proc = subprocess.Popen([sys.executable, "-m", "mpremote", "connect", port, *args])
-    interrupted = False
-    while True:
-        try:
-            code = proc.wait()
-            break
-        except KeyboardInterrupt:
-            interrupted = True  # the child got Ctrl+C too and is shutting down
-    if not interrupted:
-        return code
+def _follow(self, timeout, data_consumer=None):
+    """Same as SerialTransport.follow, but Ctrl+C is forwarded to the board."""
 
-    time.sleep(0.5)
-    try:
-        with serial.Serial(port, 115200, timeout=0.2) as s:
-            s.write(b"\x03\x03")
-            end = time.time() + 1.5
-            while time.time() < end:
-                data = s.read(256)
-                if data:
-                    sys.stdout.write(data.decode("utf-8", "replace"))
-                    sys.stdout.flush()
-            s.write(b"\x02")  # leave raw REPL
-    except (serial.SerialException, OSError) as e:
-        print(f"\nCould not interrupt the board: {e}")
-    return 130
+    def until_eof(consumer):
+        while True:
+            try:
+                data = self.read_until(1, b"\x04", timeout=timeout, data_consumer=consumer)
+            except KeyboardInterrupt:
+                self.serial.write(b"\x03")
+                continue
+            if not data.endswith(b"\x04"):
+                raise TransportError("timeout waiting for EOF reception")
+            return
 
+    out, err = bytearray(), bytearray()
+    until_eof(data_consumer or out.extend)  # program output (streamed when there is a consumer)
+    until_eof(err.extend)                   # error output (traceback of an uncaught exception)
+    return bytes(out[:-1]), bytes(err[:-1])
+
+
+SerialTransport.follow = _follow
 
 if __name__ == "__main__":
-    sys.exit(main())
+    port, args = sys.argv[1], sys.argv[2:]
+    sys.argv = ["mpremote", "connect", port, *args]
+    sys.exit(mpremote_main.main())
