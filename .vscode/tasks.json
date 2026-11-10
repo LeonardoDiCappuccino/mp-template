@@ -130,17 +130,7 @@
 
         // ---- Tooling -----------------------------------------------------------
         {
-            // Runs when the folder is opened (VS Code asks once to allow automatic tasks) and
-            // fetches the stubs only if ./typings is missing.
-            "label": "MPY: Fetch stubs if missing",
-            "type": "shell",
-            "command": "if (-not (Test-Path typings)) { & .venv/Scripts/python.exe -m pip install --no-user --upgrade 'micropython-esp32-stubs~=1.29.0' --target typings }",
-            "options": { "cwd": "${workspaceFolder}", "shell": { "executable": "powershell.exe", "args": ["-NoProfile", "-Command"] } },
-            "runOptions": { "runOn": "folderOpen" },
-            "presentation": { "reveal": "silent", "panel": "shared", "close": true },
-            "problemMatcher": []
-        },
-        {
+            // `pip install -e .` fetches the stubs once; this task refreshes them.
             "label": "MPY: Install/update stubs",
             "type": "process",
             "command": "${workspaceFolder}/.venv/Scripts/python.exe",
