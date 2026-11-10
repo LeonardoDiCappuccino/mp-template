@@ -1,0 +1,144 @@
+{
+    // Run via Terminal > Run Task. Ctrl+Shift+B runs the default task "MPR: Run current file".
+    // MPR: = USB cable (mpremote), BLE: = Bluetooth (mpble). Both use the project venv (.venv).
+    // ./src mirrors the device filesystem: src/main.py -> :/main.py, src/lib -> :/lib
+    "version": "2.0.0",
+    "tasks": [
+        // ---- USB (mpremote) ----------------------------------------------------
+        {
+            // Runs the open file from RAM. ./src is mounted at /remote on the device, so
+            // local modules (src/*.py, src/lib/*.py) are importable without uploading.
+            // Ctrl+C in the terminal stops the program.
+            "label": "MPR: Run current file",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-m", "mpremote", "connect", "${config:esp32.port}",
+                "mount", "${workspaceFolder}/src",
+                "exec", "import sys; sys.path.append('/remote/lib')",
+                "run", "${file}"
+            ],
+            "group": { "kind": "build", "isDefault": true },
+            "presentation": { "reveal": "always", "focus": true, "panel": "dedicated", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "MPR: Stop / reset",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": ["-m", "mpremote", "connect", "${config:esp32.port}", "reset"],
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "MPR: REPL",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": ["-m", "mpremote", "connect", "${config:esp32.port}", "repl"],
+            "presentation": { "reveal": "always", "focus": true, "panel": "dedicated", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            // Copies ./src to the device flash (unchanged files are skipped), then resets
+            // so boot.py/main.py run.
+            "label": "MPR: Deploy src to device",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-m", "mpremote", "connect", "${config:esp32.port}",
+                "fs", "cp", "-r", ".", ":",
+                "+", "reset"
+            ],
+            "options": { "cwd": "${workspaceFolder}/src" },
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "MPR: List device files",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": ["-m", "mpremote", "connect", "${config:esp32.port}", "fs", "tree", "-s"],
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "MPR: List serial ports",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": ["-m", "mpremote", "devs"],
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        },
+
+        // ---- Bluetooth (mpble) -------------------------------------------------
+        {
+            // Needs the BLE loader on the device (boot.py calls ble_loader.start()), flashed
+            // once over USB with "MPR: Deploy src to device". Stores the address in
+            // tools/.mpble-address so the other BLE tasks connect without scanning.
+            "label": "BLE: Link board (address via USB)",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/mpble.exe",
+            "args": ["link", "--port", "${config:esp32.port}"],
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            // Uploads the open file as /_run.py, runs it and streams its output. --stop ends
+            // a program still running from an earlier run first (the board restarts).
+            // Ctrl+C in the terminal stops the run (device resets); prefer it over
+            // "Terminate Task". Sync src first if the file imports local modules.
+            "label": "BLE: Run current file",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/mpble.exe",
+            "args": ["exec", "--stop", "${file}"],
+            "presentation": { "reveal": "always", "focus": true, "panel": "dedicated", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "BLE: Stop / reset device",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/mpble.exe",
+            "args": ["stop"],
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "BLE: REPL",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/mpble.exe",
+            "args": ["repl"],
+            "presentation": { "reveal": "always", "focus": true, "panel": "dedicated", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            // Uploads changed files of ./src, then resets so boot.py/main.py run.
+            "label": "BLE: Sync src to device",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/mpble.exe",
+            "args": ["sync", "${workspaceFolder}/src", "--reset"],
+            "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "BLE: List device files",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/mpble.exe",
+            "args": ["ls", "/"],
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        },
+
+        // ---- Tooling -----------------------------------------------------------
+        {
+            "label": "MPY: Install/update stubs",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-m", "pip", "install", "--no-user", "--upgrade",
+                "micropython-esp32-stubs~=1.29.0", "--target", "typings"
+            ],
+            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
+            "problemMatcher": []
+        }
+    ]
+}

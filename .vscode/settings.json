@@ -1,0 +1,35 @@
+{
+    // ---- Microcontroller config --------------------------------------------
+    // Serial port of the ESP32 (CP210x USB-UART). Use "auto" to pick the first
+    // USB serial device. Used by the tasks in tasks.json via ${config:esp32.port}.
+    "esp32.port": "auto",
+
+    // ---- Python venv (provides mpremote, used by tasks.json) -----------------
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+
+    // ---- IntelliSense for MicroPython ----------------------------------------
+    // Stubs for MicroPython v1.29 / ESP32_GENERIC live in ./typings
+    // (re-install with the task "MPY: Install/update stubs").
+    "python.languageServer": "Pylance",
+    "python.analysis.stubPath": "typings",
+    "python.analysis.extraPaths": ["src", "src/lib", "src/util"],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none"
+    },
+    "python.analysis.exclude": ["typings", ".venv"],
+
+    "cSpell.words": [
+        "autorun", "bleak", "dupterm", "ENODEV", "gatts", "ilistdir",
+        "mpremote", "mpble", "unhexlify", "unpair", "micropython",
+        "LOCALAPPDATA", "winrt", "rssi"
+    ],
+
+    "files.exclude": {
+        "**/__pycache__": true
+    },
+    "[python]": {
+        "editor.tabSize": 4
+    }
+}
