@@ -17,6 +17,10 @@ python -m venv .venv
 pip install -e .          # installiert mpremote, bleak und den Befehl `mpble` (Python 3.10 oder neuer)
 ```
 
+Die MicroPython-Stubs für IntelliSense (`typings/`) holt VS Code beim Öffnen des Ordners automatisch
+(Task `MPY: Fetch stubs if missing`, beim ersten Mal die automatischen Tasks erlauben). Aktualisieren
+geht mit dem Task `MPY: Install/update stubs`.
+
 Alle Abhängigkeiten stehen in `pyproject.toml`. Es gibt keine `requirements.txt`.
 
 Der serielle Port für die `MPR:`-Tasks steht in `.vscode/settings.json` (`esp32.port`). `mpremote devs`
